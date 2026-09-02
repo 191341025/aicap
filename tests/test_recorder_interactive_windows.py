@@ -90,13 +90,15 @@ def test_typed_command_is_forwarded_executed_and_recorded(tmp_path):
         _drain(proc, 1.5)
 
         proc.write("exit\r\n")
-        # 10.0s, not 5.0s: this is the first Windows interactive test in the
-        # file, so process/ConPTY startup on a real machine has no warm
-        # cache/JIT/antivirus-scan yet to help it -- confirmed by a real CI
-        # failure on a GitHub Actions Windows runner at 5.0s (matches the
-        # exit-wait budget test_known_limitation_ctrl_c_does_not_interrupt_
-        # the_child_command already uses below).
-        deadline = time.time() + 10.0
+        # 25.0s: confirmed via two real CI failures on a GitHub Actions
+        # Windows runner that neither 5.0s nor 10.0s was enough for this
+        # process/ConPTY teardown to complete -- CI Windows runners are
+        # meaningfully slower than a local dev machine for exactly this
+        # kind of console/process-teardown work. Generous on purpose: this
+        # only matters when things are already slow, so it costs nothing
+        # on a normal-speed run (the loop exits as soon as `proc` actually
+        # dies, it does not sleep the full budget every time).
+        deadline = time.time() + 25.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
         assert not proc.isalive(), "aicap's own process should have exited after 'exit'"
@@ -154,7 +156,7 @@ def test_known_limitation_ctrl_c_does_not_interrupt_the_child_command(tmp_path):
         )
 
         proc.write("exit\r\n")
-        deadline = time.time() + 10.0
+        deadline = time.time() + 25.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
     finally:
@@ -196,7 +198,7 @@ def test_child_console_is_resized_to_match_the_real_terminal(tmp_path):
         )
 
         proc.write("exit\r\n")
-        deadline = time.time() + 5.0
+        deadline = time.time() + 25.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
     finally:
