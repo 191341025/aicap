@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.venv-linux/
+build/
+dist/
+
+# Internal dev-process docs: not meant for the public repo.
+# Only code (and in-code comments) is open source; our design thinking,
+# planning, and process notes stay private.
+docs/plan.md
+docs/progress.md
+docs/manual_test_script.md
+CLAUDE.md
+
+# Ad-hoc debug log pasted into the project root during troubleshooting;
+# not project content.
+templog.log
