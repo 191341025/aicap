@@ -23,10 +23,8 @@
 
 ## 安装
 
-还没发布到 PyPI，目前直接从这个仓库安装：
-
 ```bash
-pipx install "git+https://github.com/191341025/aicap.git"
+pipx install aicap
 ```
 
 装命令行工具推荐用 [`pipx`](https://pipx.pypa.io/)：它会把 `aicap` 装进一个独立的隔离环境，不会跟你其他 Python 项目的依赖打架，同时 `aicap` 命令本身在哪儿都能直接用。在比较新的 Linux 发行版上，这也是下面几种方式里**唯一能稳定用的**（见下面的提示）。
@@ -52,12 +50,12 @@ pipx ensurepath
 普通 `pip` 在大多数系统上也能装：
 
 ```bash
-pip install "git+https://github.com/191341025/aicap.git"
+pip install aicap
 ```
 
 > **提示：** 在比较新的 Linux 发行版上（Debian 12+、Ubuntu 23.04+，以及其他遵循 [PEP 668](https://peps.python.org/pep-0668/) 规范的系统），像上面这样直接 `pip install`——甚至 `pip install --user`——默认会被拦下，报 `error: externally-managed-environment`，这是系统故意这么设计的，就是为了把你导向 `pipx`（或者虚拟环境）来装这类独立命令行工具。如果遇到这个报错，改用上面的 `pipx` 安装方式就行。
 
-需要 Python 3.9+，以及能在 PATH 里找到的 `git`。
+需要 Python 3.9+。
 
 ## 快速上手
 
