@@ -23,8 +23,9 @@ class FakeRecorder:
 
     instances = []
 
-    def __init__(self, log_dir):
+    def __init__(self, log_dir, shell=None):
         self.log_dir = log_dir
+        self.shell = shell
         self.run_interactive_called = False
 
         class _FakeLogWriter:
@@ -74,6 +75,29 @@ def test_start_uses_run_interactive_regardless_of_platform(monkeypatch, tmp_path
         captured = capsys.readouterr()
         assert str(tmp_path) in captured.out
         assert "fake-session-id" in captured.out
+
+
+def test_start_passes_no_shell_by_default(monkeypatch, tmp_path):
+    FakeRecorder.instances = []
+    monkeypatch.setattr(cli, "Recorder", FakeRecorder)
+
+    cli.main(["start", str(tmp_path)])
+
+    assert FakeRecorder.instances[0].shell is None
+
+
+def test_start_shell_flag_is_passed_through_to_recorder(monkeypatch, tmp_path):
+    # Regression test: WindowsShellBackend/UnixShellBackend both already
+    # accept an explicit shell (e.g. "pwsh" for PowerShell 7, not just the
+    # "powershell"/auto-detected default), but _run_start previously never
+    # exposed any way to choose it -- `aicap start` always used the
+    # default, with no CLI-level path to PowerShell 7 at all.
+    FakeRecorder.instances = []
+    monkeypatch.setattr(cli, "Recorder", FakeRecorder)
+
+    cli.main(["start", str(tmp_path), "--shell", "pwsh"])
+
+    assert FakeRecorder.instances[0].shell == "pwsh"
 
 
 def test_status_prints_status_md_contents(tmp_path, capsys):
