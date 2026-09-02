@@ -4,6 +4,16 @@ driving a real ConPTY/PSReadLine combination, which stage 5 direct
 verification found does NOT behave the same way as a mocked stand-in would:
 see the module's own docstring for the AICAP_MARKER_FILE encoding bug that
 only showed up against the real thing).
+
+`pytest.mark.skipif` alone is not enough to skip cleanly on non-Windows:
+it only skips running the tests, not collecting the module, so the
+`import winpty` inside `aicap.pty_backend.windows_backend` would still
+fail at collection time on a machine without `pywinpty` installed (real
+CI failure on the Linux runner: `ModuleNotFoundError: No module named
+'winpty'` -- pywinpty is declared `sys_platform == 'win32'`-only in
+pyproject.toml, so it is never installed there at all). The platform
+check must happen before the Windows-only import, same fix already used
+in tests/test_recorder_interactive_windows.py.
 """
 import sys
 import time
@@ -12,7 +22,8 @@ import pytest
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Windows-only backend")
 
-from aicap.pty_backend.windows_backend import WindowsShellBackend  # noqa: E402
+if sys.platform == "win32":
+    from aicap.pty_backend.windows_backend import WindowsShellBackend
 
 
 def _drain(backend, seconds):
@@ -60,7 +71,7 @@ def backend():
 
 def test_command_boundary_is_captured_with_correct_exit_code(backend):
     backend.write_input(b"echo hello_from_aicap\r\n")
-    _drain(backend, 1.0)
+    _drain(backend, 2.5)
 
     events = backend.read_new_boundary_events()
     starts = [e for e in events if e.get("event") == "start"]
@@ -71,8 +82,13 @@ def test_command_boundary_is_captured_with_correct_exit_code(backend):
 
 
 def test_failing_command_reports_nonzero_exit_code(backend):
+    # 2.5s, not 1.0s: PowerShell's error-record formatting for an unknown
+    # command is slower to reach the "end" boundary event than a plain
+    # successful cmdlet -- confirmed by a real CI failure on a GitHub
+    # Actions Windows runner (slower than a local dev machine) at 1.0s,
+    # while the sibling success-case test above passed at the same value.
     backend.write_input(b"nonexistent-command-xyz\r\n")
-    _drain(backend, 1.0)
+    _drain(backend, 2.5)
 
     events = backend.read_new_boundary_events()
     ends = [e for e in events if e.get("event") == "end"]
@@ -88,9 +104,9 @@ def test_non_ascii_command_text_round_trips_exactly(backend):
     # was silently dropped. Fixed by writing via .NET UTF8Encoding($false).
     command = "echo 你好"  # "echo 你好"
     backend.write_input(command.encode("utf-8"))
-    _drain(backend, 0.5)
-    backend.write_input(b"\r\n")
     _drain(backend, 1.0)
+    backend.write_input(b"\r\n")
+    _drain(backend, 2.5)
 
     events = backend.read_new_boundary_events()
     starts = [e for e in events if e.get("event") == "start" and "command" in e]
@@ -102,14 +118,14 @@ def test_non_ascii_output_round_trips(backend):
     backend.write_input(
         "Write-Output 'AICAP_CN_TEST_你好世界'\r\n".encode("utf-8")
     )
-    output = _drain(backend, 1.0)
+    output = _drain(backend, 2.5)
 
     assert "你好世界".encode("utf-8") in output
 
 
 def test_backend_detects_exit_and_close_is_idempotent(backend):
     backend.write_input(b"exit\r\n")
-    _drain(backend, 2.0)
+    _drain(backend, 3.5)
 
     assert backend.is_alive() is False
 

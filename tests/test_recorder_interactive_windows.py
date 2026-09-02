@@ -11,6 +11,7 @@ condition must not itself trigger a failing import), so the platform check
 happens before any Windows-only import.
 """
 
+import os
 import sys
 
 import pytest
@@ -24,6 +25,8 @@ if sys.platform == "win32":
     import time
 
     import winpty
+
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 _INNER_SCRIPT_TEMPLATE = """\
 import sys
@@ -78,7 +81,7 @@ def _read_index(log_dir):
 
 def test_typed_command_is_forwarded_executed_and_recorded(tmp_path):
     proc, log_dir = _spawn_outer(
-        tmp_path, sys.executable, r"D:\IdeaProjects\cli-screen-recording-tool"
+        tmp_path, sys.executable, _PROJECT_ROOT
     )
     try:
         _drain(proc, 4.0)  # let the hook script + PowerShell profile finish loading
@@ -87,7 +90,13 @@ def test_typed_command_is_forwarded_executed_and_recorded(tmp_path):
         _drain(proc, 1.5)
 
         proc.write("exit\r\n")
-        deadline = time.time() + 5.0
+        # 10.0s, not 5.0s: this is the first Windows interactive test in the
+        # file, so process/ConPTY startup on a real machine has no warm
+        # cache/JIT/antivirus-scan yet to help it -- confirmed by a real CI
+        # failure on a GitHub Actions Windows runner at 5.0s (matches the
+        # exit-wait budget test_known_limitation_ctrl_c_does_not_interrupt_
+        # the_child_command already uses below).
+        deadline = time.time() + 10.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
         assert not proc.isalive(), "aicap's own process should have exited after 'exit'"
@@ -116,7 +125,7 @@ def test_known_limitation_ctrl_c_does_not_interrupt_the_child_command(tmp_path):
     behavior silently drifting unnoticed.
     """
     proc, log_dir = _spawn_outer(
-        tmp_path, sys.executable, r"D:\IdeaProjects\cli-screen-recording-tool"
+        tmp_path, sys.executable, _PROJECT_ROOT
     )
     try:
         _drain(proc, 4.0)
@@ -170,7 +179,7 @@ def test_child_console_is_resized_to_match_the_real_terminal(tmp_path):
     proc, log_dir = _spawn_outer(
         tmp_path,
         sys.executable,
-        r"D:\IdeaProjects\cli-screen-recording-tool",
+        _PROJECT_ROOT,
         dimensions=(51, 137),
     )
     try:
