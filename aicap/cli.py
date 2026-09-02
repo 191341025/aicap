@@ -2,15 +2,10 @@
 
 This module wires up the ``aicap`` console script (see ``[project.scripts]``
 in pyproject.toml). ``start`` spawns a ``Recorder`` (see ``recorder.py``) and
-runs it until the child shell exits; ``status`` reads and prints the
-``STATUS.md`` a ``LogWriter`` maintains at the root of a log directory.
-
-Scope note: ``start`` does not yet forward the real user's keystrokes to the
-recorded shell or mirror its output back to the terminal -- that is
-docs/plan.md's stage 6b, not built yet. Running ``start`` right now spawns a
-real shell and records whatever boundary events/output it produces on its
-own (from its startup and defaults), but a person cannot yet interact with
-it through aicap.
+runs ``run_interactive()`` -- forwarding the real terminal's keystrokes to
+the recorded shell and mirroring its output back -- until the child shell
+exits; ``status`` reads and prints the ``STATUS.md`` a ``LogWriter``
+maintains at the root of a log directory.
 """
 
 import argparse
@@ -48,6 +43,15 @@ def build_parser() -> argparse.ArgumentParser:
         "log_dir",
         help="Directory to write session logs to (required)",
     )
+    start_parser.add_argument(
+        "--shell",
+        default=None,
+        help=(
+            "Which shell to record. Windows: 'powershell' (Windows "
+            "PowerShell 5.1, the default) or 'pwsh' (PowerShell 7+). "
+            "Unix: 'bash' or 'zsh' (default: auto-detected from $SHELL)."
+        ),
+    )
 
     status_parser = subparsers.add_parser(
         "status",
@@ -61,8 +65,8 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _run_start(log_dir: str) -> int:
-    recorder = Recorder(log_dir)
+def _run_start(log_dir: str, shell: Optional[str] = None) -> int:
+    recorder = Recorder(log_dir, shell=shell)
     # flush=True: run_interactive() switches to writing the child's output
     # directly to the raw console handle (bypassing Python's own stdout
     # buffer entirely) almost immediately after this. Without an explicit
@@ -105,7 +109,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     if arguments.command == "start":
-        return _run_start(arguments.log_dir)
+        return _run_start(arguments.log_dir, shell=arguments.shell)
 
     if arguments.command == "status":
         return _run_status(arguments.log_dir)

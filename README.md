@@ -16,7 +16,7 @@ Nothing about the terminal changes from your side. `aicap` sits between you and 
 
 ## Supported platforms
 
-- Windows: PowerShell 5.1+ (Windows PowerShell and PowerShell 7 both work)
+- Windows: PowerShell 5.1 (Windows PowerShell, the default) — this is the extensively tested path. PowerShell 7 (`pwsh`) is also supported via `aicap start <log_dir> --shell pwsh`, but has seen far less real-world testing so far.
 - Linux / macOS: bash, zsh
 
 fish and cmd.exe are not supported.
@@ -41,16 +41,26 @@ Requires Python 3.9+ and `git` on your PATH.
 
 ## Quick start
 
-1. Open a terminal, `cd` to wherever you want the recording written, and start a session:
+`aicap start` takes one argument: a directory to write the recording to. That directory has nothing to do with where you're working — it's just where the logs go. Most people point it at one fixed location (e.g. somewhere under their home directory) and reuse it across every project, so their AI assistant always knows where to look, no matter what they're currently working on.
+
+1. Open a terminal wherever you're actually working (a project directory, for example) and start a session:
 
    ```bash
-   aicap start ./ai-session-logs
+   # bash / zsh
+   aicap start ~/aicap-logs
    ```
+
+   ```powershell
+   # PowerShell (note: use $HOME, not ~ — PowerShell doesn't expand ~ the way bash does)
+   aicap start $HOME\aicap-logs
+   ```
+
+   This does **not** change your terminal's working directory — you're still exactly where you started. The path you pass is only where the recording gets written; it can be anywhere, and doesn't need to relate to your project at all.
 
    You'll see:
 
    ```
-   aicap: recording started, writing to ./ai-session-logs
+   aicap: recording started, writing to /home/you/aicap-logs
    aicap: session id 20260101-120000-a1b2c3
    ```
 
@@ -72,7 +82,7 @@ Requires Python 3.9+ and `git` on your PATH.
    aicap: recording finished, session 20260101-120000-a1b2c3 saved
    ```
 
-4. Point your AI assistant at `./ai-session-logs`. The most useful entry points:
+4. Point your AI assistant at `~/aicap-logs` (or wherever you passed to `start`). The most useful entry points:
 
    - `STATUS.md` — a short, human-readable summary of the last several commands and their exit codes. This is the file to read first.
    - `latest.log` — the full output of the most recently finished command.
@@ -82,7 +92,7 @@ Requires Python 3.9+ and `git` on your PATH.
 Check on a session at any time (even a past one) without starting a new recording:
 
 ```bash
-aicap status ./ai-session-logs
+aicap status ~/aicap-logs
 ```
 
 ## How it works, briefly

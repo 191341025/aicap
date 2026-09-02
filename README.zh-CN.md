@@ -16,7 +16,7 @@
 
 ## 支持平台
 
-- Windows：PowerShell 5.1+（Windows PowerShell 和 PowerShell 7 都支持）
+- Windows：Windows PowerShell 5.1（默认）—— 这是经过大量真实测试的路径。PowerShell 7（`pwsh`）也支持，用 `aicap start <log_dir> --shell pwsh` 即可，但目前实际测试还很少。
 - Linux / macOS：bash、zsh
 
 不支持 fish 和 cmd.exe。
@@ -41,16 +41,26 @@ pip install "git+https://github.com/191341025/aicap.git"
 
 ## 快速上手
 
-1. 打开一个终端，`cd` 到你想存放录制内容的位置，启动一个会话：
+`aicap start` 只接受一个参数：日志要写到哪个目录。**这个目录跟你在哪工作没有任何关系**——它只是日志的存放位置。大部分人会固定用一个地方（比如自己主目录下的某个目录），不管当下在跑哪个项目都指向同一个日志目录，这样 AI 助手永远知道去哪看，不用每次都变。
+
+1. 打开一个终端，去你实际要工作的地方（比如某个项目目录），然后启动一个会话：
 
    ```bash
-   aicap start ./ai-session-logs
+   # bash / zsh
+   aicap start ~/aicap-logs
    ```
+
+   ```powershell
+   # PowerShell（注意用 $HOME，不要用 ~ —— PowerShell 不会像 bash 那样自动展开 ~）
+   aicap start $HOME\aicap-logs
+   ```
+
+   这**不会**改变你终端当前所在的工作目录——你还是待在你原来那个地方。这里传的路径只是决定录制内容写到哪，可以是任意路径，跟你手头的项目完全没有关系。
 
    你会看到：
 
    ```
-   aicap: recording started, writing to ./ai-session-logs
+   aicap: recording started, writing to /home/you/aicap-logs
    aicap: session id 20260101-120000-a1b2c3
    ```
 
@@ -72,7 +82,7 @@ pip install "git+https://github.com/191341025/aicap.git"
    aicap: recording finished, session 20260101-120000-a1b2c3 saved
    ```
 
-4. 把 `./ai-session-logs` 目录告诉你的 AI 助手。最常用的几个入口：
+4. 把 `~/aicap-logs`（或者你传给 `start` 的那个路径）告诉你的 AI 助手。最常用的几个入口：
 
    - `STATUS.md` —— 一份简短、人类可读的摘要，列出最近几条命令和退出码。**优先看这个文件。**
    - `latest.log` —— 最近一条已完成命令的完整输出。
@@ -82,7 +92,7 @@ pip install "git+https://github.com/191341025/aicap.git"
 不启动新录制的情况下，随时查看某次会话（包括已经结束的）：
 
 ```bash
-aicap status ./ai-session-logs
+aicap status ~/aicap-logs
 ```
 
 ## 大致原理
