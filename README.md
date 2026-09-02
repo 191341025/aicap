@@ -1,6 +1,6 @@
 # aicap
 
-[中文文档](README.zh-CN.md)
+[中文文档](https://github.com/191341025/aicap/blob/main/README.zh-CN.md)
 
 Record what happens in your terminal so an AI assistant can read it directly — no more copy-pasting command output or screenshots back and forth.
 
@@ -29,13 +29,33 @@ Not yet published to PyPI — install directly from this repository for now:
 pipx install "git+https://github.com/191341025/aicap.git"
 ```
 
-[`pipx`](https://pipx.pypa.io/) is the recommended way to install a command-line tool like this one: it puts `aicap` in its own isolated environment so it can't conflict with dependencies from your other Python projects, while still making the `aicap` command available everywhere.
+[`pipx`](https://pipx.pypa.io/) is the recommended way to install a command-line tool like this one: it puts `aicap` in its own isolated environment so it can't conflict with dependencies from your other Python projects, while still making the `aicap` command available everywhere. It's also the *only* method below that reliably works on newer Linux distros (see the note below).
 
-Don't have `pipx`? Plain `pip` works too:
+Don't have `pipx` yet?
+
+```bash
+# Debian/Ubuntu (Debian 12+, Ubuntu 23.04+)
+sudo apt install pipx
+pipx ensurepath
+
+# macOS
+brew install pipx
+pipx ensurepath
+
+# Other platforms (incl. Windows)
+pip install --user pipx
+pipx ensurepath
+```
+
+See the [official pipx install guide](https://pipx.pypa.io/latest/how-to/install-pipx.html) for anything not covered above.
+
+Plain `pip` also works, on most systems:
 
 ```bash
 pip install "git+https://github.com/191341025/aicap.git"
 ```
+
+> **Note:** on newer Linux distros (Debian 12+, Ubuntu 23.04+, and others that follow [PEP 668](https://peps.python.org/pep-0668/)), a plain `pip install` like this — and even `pip install --user` — is blocked by default with `error: externally-managed-environment`, specifically to steer you toward `pipx` (or a virtual environment) for exactly this kind of standalone command-line tool. If you hit that error, use the `pipx` install above instead.
 
 Requires Python 3.9+ and `git` on your PATH.
 
@@ -107,4 +127,4 @@ aicap status ~/aicap-logs
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](https://github.com/191341025/aicap/blob/main/LICENSE).
