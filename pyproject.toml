@@ -6,14 +6,38 @@ build-backend = "setuptools.build_meta"
 name = "aicap"
 version = "0.0.1"
 description = "Take over an interactive shell session and record command input/output in a structured format for AI to read."
+readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Topic :: Terminals",
+    "Topic :: Utilities",
+]
 dependencies = [
     "pywinpty; sys_platform == 'win32'",
 ]
+
+[project.urls]
+Homepage = "https://github.com/191341025/aicap"
+Repository = "https://github.com/191341025/aicap"
+Issues = "https://github.com/191341025/aicap/issues"
 
 [project.scripts]
 aicap = "aicap.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["aicap*"]
+
+[tool.setuptools.package-data]
+# Not .py files, so setuptools does not pick these up on its own -- but
+# unix_backend.py/windows_backend.py load them at runtime by path relative
+# to this package, so the installed package is non-functional without
+# them. Confirmed empirically: a first build of this package omitted
+# shell_hooks/ entirely, which would have shipped a broken package to PyPI.
+aicap = ["shell_hooks/*.sh", "shell_hooks/*.ps1"]

@@ -1,6 +1,6 @@
 # aicap
 
-[English](README.md)
+[English](https://github.com/191341025/aicap/blob/main/README.md)
 
 把终端里实际发生的一切结构化记录下来，让 AI 助手能直接读取，不用再来回复制粘贴命令输出或截图。
 
@@ -29,13 +29,33 @@
 pipx install "git+https://github.com/191341025/aicap.git"
 ```
 
-装命令行工具推荐用 [`pipx`](https://pipx.pypa.io/)：它会把 `aicap` 装进一个独立的隔离环境，不会跟你其他 Python 项目的依赖打架，同时 `aicap` 命令本身在哪儿都能直接用。
+装命令行工具推荐用 [`pipx`](https://pipx.pypa.io/)：它会把 `aicap` 装进一个独立的隔离环境，不会跟你其他 Python 项目的依赖打架，同时 `aicap` 命令本身在哪儿都能直接用。在比较新的 Linux 发行版上，这也是下面几种方式里**唯一能稳定用的**（见下面的提示）。
 
-没有 `pipx` 也没关系，普通 `pip` 一样能装：
+还没装 `pipx`？
+
+```bash
+# Debian/Ubuntu（Debian 12+、Ubuntu 23.04+）
+sudo apt install pipx
+pipx ensurepath
+
+# macOS
+brew install pipx
+pipx ensurepath
+
+# 其他平台（含 Windows）
+pip install --user pipx
+pipx ensurepath
+```
+
+上面没覆盖到的情况，参考 [pipx 官方安装指南](https://pipx.pypa.io/latest/how-to/install-pipx.html)。
+
+普通 `pip` 在大多数系统上也能装：
 
 ```bash
 pip install "git+https://github.com/191341025/aicap.git"
 ```
+
+> **提示：** 在比较新的 Linux 发行版上（Debian 12+、Ubuntu 23.04+，以及其他遵循 [PEP 668](https://peps.python.org/pep-0668/) 规范的系统），像上面这样直接 `pip install`——甚至 `pip install --user`——默认会被拦下，报 `error: externally-managed-environment`，这是系统故意这么设计的，就是为了把你导向 `pipx`（或者虚拟环境）来装这类独立命令行工具。如果遇到这个报错，改用上面的 `pipx` 安装方式就行。
 
 需要 Python 3.9+，以及能在 PATH 里找到的 `git`。
 
@@ -107,4 +127,4 @@ aicap status ~/aicap-logs
 
 ## License
 
-MIT —— 见 [`LICENSE`](LICENSE)。
+MIT —— 见 [`LICENSE`](https://github.com/191341025/aicap/blob/main/LICENSE)。
