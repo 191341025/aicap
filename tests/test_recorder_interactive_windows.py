@@ -11,6 +11,7 @@ condition must not itself trigger a failing import), so the platform check
 happens before any Windows-only import.
 """
 
+import os
 import sys
 
 import pytest
@@ -24,6 +25,8 @@ if sys.platform == "win32":
     import time
 
     import winpty
+
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 _INNER_SCRIPT_TEMPLATE = """\
 import sys
@@ -78,7 +81,7 @@ def _read_index(log_dir):
 
 def test_typed_command_is_forwarded_executed_and_recorded(tmp_path):
     proc, log_dir = _spawn_outer(
-        tmp_path, sys.executable, r"D:\IdeaProjects\cli-screen-recording-tool"
+        tmp_path, sys.executable, _PROJECT_ROOT
     )
     try:
         _drain(proc, 4.0)  # let the hook script + PowerShell profile finish loading
@@ -87,7 +90,15 @@ def test_typed_command_is_forwarded_executed_and_recorded(tmp_path):
         _drain(proc, 1.5)
 
         proc.write("exit\r\n")
-        deadline = time.time() + 5.0
+        # 25.0s: confirmed via two real CI failures on a GitHub Actions
+        # Windows runner that neither 5.0s nor 10.0s was enough for this
+        # process/ConPTY teardown to complete -- CI Windows runners are
+        # meaningfully slower than a local dev machine for exactly this
+        # kind of console/process-teardown work. Generous on purpose: this
+        # only matters when things are already slow, so it costs nothing
+        # on a normal-speed run (the loop exits as soon as `proc` actually
+        # dies, it does not sleep the full budget every time).
+        deadline = time.time() + 25.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
         assert not proc.isalive(), "aicap's own process should have exited after 'exit'"
@@ -116,7 +127,7 @@ def test_known_limitation_ctrl_c_does_not_interrupt_the_child_command(tmp_path):
     behavior silently drifting unnoticed.
     """
     proc, log_dir = _spawn_outer(
-        tmp_path, sys.executable, r"D:\IdeaProjects\cli-screen-recording-tool"
+        tmp_path, sys.executable, _PROJECT_ROOT
     )
     try:
         _drain(proc, 4.0)
@@ -145,7 +156,7 @@ def test_known_limitation_ctrl_c_does_not_interrupt_the_child_command(tmp_path):
         )
 
         proc.write("exit\r\n")
-        deadline = time.time() + 10.0
+        deadline = time.time() + 25.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
     finally:
@@ -170,7 +181,7 @@ def test_child_console_is_resized_to_match_the_real_terminal(tmp_path):
     proc, log_dir = _spawn_outer(
         tmp_path,
         sys.executable,
-        r"D:\IdeaProjects\cli-screen-recording-tool",
+        _PROJECT_ROOT,
         dimensions=(51, 137),
     )
     try:
@@ -187,7 +198,7 @@ def test_child_console_is_resized_to_match_the_real_terminal(tmp_path):
         )
 
         proc.write("exit\r\n")
-        deadline = time.time() + 5.0
+        deadline = time.time() + 25.0
         while proc.isalive() and time.time() < deadline:
             time.sleep(0.2)
     finally:
